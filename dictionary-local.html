@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Daily Lexicon — Dictionary</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600;9..144,700&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --page-bg: #D9D3C5;
+    --paper: #EFEBE0;
+    --paper-shadow: #c9c2ae;
+    --ink: #232720;
+    --ink-soft: #56594f;
+    --stamp-green: #2F5233;
+    --stamp-green-soft: #e3e8dd;
+    --stamp-red: #8B3A2B;
+    --line: #b9af98;
+    --tab-inactive: #c7c0ac;
+  }
+
+  *{ box-sizing: border-box; }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 50% -10%, #e6e0d1 0%, var(--page-bg) 55%);
+    color: var(--ink);
+    font-family: 'Source Serif 4', serif;
+    display:flex;
+    justify-content:center;
+    padding: 48px 16px 80px;
+  }
+
+  .wrap{
+    width:100%;
+    max-width: 760px;
+    position:relative;
+  }
+
+  /* ---------- header ---------- */
+  .masthead{
+    text-align:center;
+    margin-bottom: 34px;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.28em;
+    text-transform:uppercase;
+    color: var(--stamp-green);
+    margin-bottom: 8px;
+  }
+  .masthead h1{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size: clamp(30px, 5vw, 44px);
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  .masthead .rule{
+    width: 120px;
+    height: 2px;
+    background: var(--ink);
+    margin: 14px auto 0;
+    opacity:0.7;
+  }
+
+  /* ---------- alphabet tab strip (signature element) ---------- */
+  .tabstrip{
+    position:absolute;
+    left: -44px;
+    top: 130px;
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+  }
+  .tabstrip .tab{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 10px;
+    width: 26px;
+    text-align:center;
+    padding: 2px 0;
+    color: var(--ink-soft);
+    background: var(--tab-inactive);
+    border-radius: 0 4px 4px 0;
+    opacity: 0.55;
+    transition: all .25s ease;
+  }
+  .tabstrip .tab.active{
+    background: var(--stamp-green);
+    color: #fff;
+    opacity:1;
+    width: 32px;
+    font-weight:600;
+  }
+  @media (max-width: 880px){ .tabstrip{ display:none; } }
+
+  /* ---------- search ---------- */
+  .search-row{
+    display:flex;
+    align-items:flex-end;
+    gap: 14px;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 10px;
+    margin-bottom: 8px;
+  }
+  .search-row label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    white-space:nowrap;
+    padding-bottom: 6px;
+  }
+  #search-input{
+    flex:1;
+    border:none;
+    background:transparent;
+    outline:none;
+    font-family:'Fraunces', serif;
+    font-size: 26px;
+    color: var(--ink);
+    padding-bottom: 4px;
+  }
+  #search-input::placeholder{ color: #9a9484; font-style:italic; }
+  .actions{ display:flex; gap:10px; }
+  .actions button{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing:.05em;
+    border: 1px solid var(--ink);
+    background: transparent;
+    color: var(--ink);
+    padding: 9px 14px;
+    cursor:pointer;
+    border-radius: 3px;
+    transition: all .15s ease;
+  }
+  .actions button:hover{ background: var(--ink); color: var(--paper); }
+  .shuffle-hint{
+    text-align:right;
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-soft);
+    margin-bottom: 30px;
+  }
+
+  /* ---------- states ---------- */
+  #status{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-soft);
+    text-align:center;
+    padding: 40px 0;
+  }
+  #status.error{ color: var(--stamp-red); }
+
+  /* ---------- card ---------- */
+  .card{
+    background: var(--paper);
+    border-radius: 4px;
+    box-shadow: 0 1px 0 var(--paper-shadow), 0 18px 40px -20px rgba(35,39,32,0.4);
+    padding: 38px 40px 30px;
+    position:relative;
+    display:none;
+  }
+  .card::before{
+    content:"";
+    position:absolute;
+    top:10px; left:10px; right:-10px; bottom:-10px;
+    background: var(--paper);
+    z-index:-1;
+    border-radius:4px;
+    box-shadow: 0 12px 30px -18px rgba(35,39,32,0.35);
+  }
+
+  .card-top{
+    display:flex;
+    align-items:flex-start;
+    gap:16px;
+  }
+  .letter-stamp{
+    font-family:'Fraunces', serif;
+    font-weight:700;
+    font-size: 20px;
+    color: #fff;
+    background: var(--stamp-green);
+    width: 44px; height:44px;
+    display:flex; align-items:center; justify-content:center;
+    border-radius: 3px;
+    transform: rotate(-3deg);
+    flex-shrink:0;
+    margin-top:4px;
+  }
+  .word-block{ flex:1; }
+  .word-title{
+    font-family:'Fraunces', serif;
+    font-weight:700;
+    font-size: clamp(30px, 5vw, 42px);
+    margin:0;
+    line-height:1;
+  }
+  .word-meta{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-top: 10px;
+    flex-wrap:wrap;
+  }
+  .phonetic{
+    font-family:'IBM Plex Mono', monospace;
+    color: var(--stamp-red);
+    font-size: 15px;
+  }
+  .play-btn{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 11px;
+    border: 1px solid var(--stamp-red);
+    color: var(--stamp-red);
+    background:transparent;
+    border-radius: 50px;
+    padding: 4px 12px 4px 10px;
+    cursor:pointer;
+    display: inline-flex;
+    align-items:center;
+    gap:6px;
+  }
+  .play-btn:hover{ background: var(--stamp-red); color:#fff; }
+  .play-btn:disabled{ opacity:0.3; cursor:default; }
+
+  .rule{
+    border:none;
+    border-top: 1px dashed var(--line);
+    margin: 22px 0;
+  }
+
+  .pos{
+    font-family:'Source Serif 4', serif;
+    font-style: italic;
+    font-weight:600;
+    color: var(--stamp-green);
+    font-size: 16px;
+    margin: 22px 0 10px;
+    text-transform: lowercase;
+  }
+  .pos:first-of-type{ margin-top:0; }
+
+  .sense{
+    display:flex;
+    gap:10px;
+    margin-bottom: 14px;
+    font-size: 16.5px;
+    line-height:1.55;
+  }
+  .sense .num{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-soft);
+    padding-top:2px;
+  }
+  .sense .example{
+    display:block;
+    color: var(--ink-soft);
+    font-style: italic;
+    margin-top: 3px;
+    font-size: 15px;
+  }
+  .sense .example::before{ content: "“"; }
+  .sense .example::after{ content: "”"; }
+
+  .synonyms{
+    margin-top: 6px;
+    font-size: 14px;
+    color: var(--ink-soft);
+  }
+  .synonyms .label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 10px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color: var(--stamp-green);
+    margin-right: 8px;
+  }
+  .syn-chip{
+    display:inline-block;
+    border:1px solid var(--line);
+    border-radius: 3px;
+    padding: 2px 8px;
+    margin: 2px 4px 2px 0;
+    font-size: 13px;
+    cursor:pointer;
+    background: var(--stamp-green-soft);
+  }
+  .syn-chip:hover{ border-color: var(--stamp-green); }
+
+  .source-note{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-soft);
+    margin-top: 26px;
+    text-align:right;
+  }
+
+  /* ---------- recent searches (index cards) ---------- */
+  .recent{
+    margin-top: 26px;
+    display:flex;
+    flex-wrap:wrap;
+    gap: 8px;
+    justify-content:center;
+  }
+  .recent .chip{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.4);
+    padding: 5px 10px;
+    border-radius: 3px;
+    cursor:pointer;
+  }
+  .recent .chip:hover{ border-color: var(--ink); color: var(--ink); }
+
+  @media (max-width: 520px){
+    .card{ padding: 26px 20px; }
+    .word-meta{ gap:10px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="tabstrip" id="tabstrip"></div>
+
+  <div class="masthead">
+    <div class="eyebrow">Entry № — a working dictionary</div>
+    <h1>The Daily Lexicon</h1>
+    <div class="rule"></div>
+  </div>
+
+  <div class="search-row">
+    <label for="search-input">Look up</label>
+    <input id="search-input" type="text" placeholder="type a word…" autocomplete="off" spellcheck="false">
+    <div class="actions">
+      <button id="shuffle-btn" type="button">Surprise me</button>
+      <button id="search-btn" type="button">Define →</button>
+    </div>
+  </div>
+  <div class="shuffle-hint">press enter to search</div>
+
+  <div id="status"></div>
+
+  <div class="card" id="card">
+    <div class="card-top">
+      <div class="letter-stamp" id="letter-stamp">Aa</div>
+      <div class="word-block">
+        <h2 class="word-title" id="word-title">—</h2>
+        <div class="word-meta">
+          <span class="phonetic" id="phonetic"></span>
+          <button class="play-btn" id="play-btn" disabled>▶ play</button>
+        </div>
+      </div>
+    </div>
+
+    <hr class="rule">
+
+    <div id="meanings"></div>
+
+    <div class="synonyms" id="synonyms-wrap" style="display:none;">
+      <span class="label">Synonyms</span>
+      <span id="synonyms-list"></span>
+    </div>
+
+    <div class="source-note" id="source-note"></div>
+  </div>
+
+  <div class="recent" id="recent"></div>
+
+</div>
+
+<script>
+  const API = "https://api.dictionaryapi.dev/api/v2/entries/en/";
+  const RANDOM_WORDS = ["resonate","ephemeral","cascade","luminous","tangent","solitude","kinetic","mosaic","threshold","verve","gravity","echo","paradox","lattice","nostalgia","surge","catalyst","horizon","fragment","serene","velvet","murmur","zenith","drift","anchor","bloom","cipher","glimmer","hollow","pulse"];
+  const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+
+  const input = document.getElementById("search-input");
+  const searchBtn = document.getElementById("search-btn");
+  const shuffleBtn = document.getElementById("shuffle-btn");
+  const statusEl = document.getElementById("status");
+  const card = document.getElementById("card");
+  const letterStamp = document.getElementById("letter-stamp");
+  const wordTitle = document.getElementById("word-title");
+  const phoneticEl = document.getElementById("phonetic");
+  const playBtn = document.getElementById("play-btn");
+  const meaningsEl = document.getElementById("meanings");
+  const synWrap = document.getElementById("synonyms-wrap");
+  const synList = document.getElementById("synonyms-list");
+  const sourceNote = document.getElementById("source-note");
+  const recentEl = document.getElementById("recent");
+  const tabstrip = document.getElementById("tabstrip");
+
+  let recentWords = [];
+  let currentAudio = null;
+
+  // build alphabet tab strip
+  ALPHABET.forEach(letter => {
+    const tab = document.createElement("div");
+    tab.className = "tab";
+    tab.textContent = letter;
+    tab.dataset.letter = letter;
+    tabstrip.appendChild(tab);
+  });
+
+  function setActiveTab(word){
+    const first = (word[0] || "").toUpperCase();
+    document.querySelectorAll(".tabstrip .tab").forEach(t=>{
+      t.classList.toggle("active", t.dataset.letter === first);
+    });
+  }
+
+  function setStatus(text, isError){
+    statusEl.textContent = text;
+    statusEl.className = isError ? "error" : "";
+    statusEl.style.display = text ? "block" : "none";
+  }
+
+  function addRecent(word){
+    recentWords = recentWords.filter(w => w.toLowerCase() !== word.toLowerCase());
+    recentWords.unshift(word);
+    recentWords = recentWords.slice(0, 6);
+    renderRecent();
+  }
+
+  function renderRecent(){
+    recentEl.innerHTML = "";
+    recentWords.forEach(w => {
+      const chip = document.createElement("div");
+      chip.className = "chip";
+      chip.textContent = w;
+      chip.addEventListener("click", () => lookup(w));
+      recentEl.appendChild(chip);
+    });
+  }
+
+  async function lookup(word){
+    word = word.trim();
+    if(!word) return;
+    input.value = word;
+    card.style.display = "none";
+    setStatus("checking the shelves…");
+
+    try{
+      const res = await fetch(API + encodeURIComponent(word));
+      if(!res.ok){
+        if(res.status === 404){
+          setStatus(`No entry for “${word}.” Check the spelling, or try a nearby word.`, true);
+        } else {
+          setStatus("The archive didn't respond. Try again in a moment.", true);
+        }
+        return;
+      }
+      const data = await res.json();
+      renderEntry(data[0], word);
+      setStatus("");
+      addRecent(word);
+      setActiveTab(word);
+    } catch(err){
+      setStatus("Couldn't reach the archive. Check your connection and try again.", true);
+    }
+  }
+
+  function renderEntry(entry, fallbackWord){
+    const word = entry.word || fallbackWord;
+    wordTitle.textContent = word;
+    letterStamp.textContent = (word.slice(0,2) || "—");
+
+    // phonetic + audio
+    const phoneticText = entry.phonetic || (entry.phonetics.find(p => p.text)?.text) || "";
+    phoneticEl.textContent = phoneticText;
+    const audioEntry = entry.phonetics.find(p => p.audio);
+    if(audioEntry && audioEntry.audio){
+      playBtn.disabled = false;
+      playBtn.onclick = () => {
+        if(currentAudio){ currentAudio.pause(); }
+        currentAudio = new Audio(audioEntry.audio.startsWith("http") ? audioEntry.audio : "https:" + audioEntry.audio);
+        currentAudio.play();
+      };
+    } else {
+      playBtn.disabled = true;
+      playBtn.onclick = null;
+    }
+
+    // meanings
+    meaningsEl.innerHTML = "";
+    const allSynonyms = new Set();
+    entry.meanings.forEach(meaning => {
+      const posEl = document.createElement("div");
+      posEl.className = "pos";
+      posEl.textContent = meaning.partOfSpeech;
+      meaningsEl.appendChild(posEl);
+
+      meaning.definitions.slice(0, 4).forEach((def, i) => {
+        const senseEl = document.createElement("div");
+        senseEl.className = "sense";
+        const num = document.createElement("span");
+        num.className = "num";
+        num.textContent = (i+1) + ".";
+        const textWrap = document.createElement("div");
+        textWrap.innerHTML = def.definition + (def.example ? `<span class="example">${def.example}</span>` : "");
+        senseEl.appendChild(num);
+        senseEl.appendChild(textWrap);
+        meaningsEl.appendChild(senseEl);
+
+        (def.synonyms || []).forEach(s => allSynonyms.add(s));
+      });
+      (meaning.synonyms || []).forEach(s => allSynonyms.add(s));
+    });
+
+    if(allSynonyms.size > 0){
+      synWrap.style.display = "block";
+      synList.innerHTML = "";
+      Array.from(allSynonyms).slice(0, 10).forEach(s => {
+        const chip = document.createElement("span");
+        chip.className = "syn-chip";
+        chip.textContent = s;
+        chip.addEventListener("click", () => lookup(s));
+        synList.appendChild(chip);
+      });
+    } else {
+      synWrap.style.display = "none";
+    }
+
+    sourceNote.textContent = "source: Free Dictionary API";
+    card.style.display = "block";
+  }
+
+  searchBtn.addEventListener("click", () => lookup(input.value));
+  input.addEventListener("keydown", (e) => { if(e.key === "Enter") lookup(input.value); });
+  shuffleBtn.addEventListener("click", () => {
+    const w = RANDOM_WORDS[Math.floor(Math.random() * RANDOM_WORDS.length)];
+    lookup(w);
+  });
+
+  // initial word
+  lookup("resonate");
+</script>
+
+</body>
+</html>
