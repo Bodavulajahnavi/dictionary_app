@@ -6,7 +6,6 @@ Two versions are included:
 
 | File | Data source | Where it works |
 |---|---|---|
-| `dictionary.html` | Claude (AI-generated definitions) | Works directly inside the Claude.ai artifact preview |
 | `dictionary-local.html` | [Free Dictionary API](https://dictionaryapi.dev/) (real definitions + audio pronunciation) | Works in a regular browser, but needs to be run through a local server (see below) |
 
 If you just want to try it quickly inside Claude, use `dictionary.html`. If you want real dictionary data and actual audio pronunciations, use `dictionary-local.html` and follow the setup steps below.
